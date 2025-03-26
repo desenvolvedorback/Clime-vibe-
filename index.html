@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clime Vibe</title>
+    <style>
+        /* Estilos principais */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #2980b9, #6dd5fa, #ffffff);
+            overflow: hidden;
+            color: #fff;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            opacity: 0; /* Inicializa com página invisível */
+            animation: fadeIn 1s forwards 0.5s; /* Fade-in ao carregar a página */
+        }
+
+        /* Animação de fundo */
+        .background-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/clouds.png') repeat-x;
+            background-size: cover;
+            animation: moveBackground 60s linear infinite;
+            z-index: -1;
+        }
+
+        /* Animação do fundo */
+        @keyframes moveBackground {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 100% 100%;
+            }
+        }
+
+        /* Efeito fade-in para o carregamento da página */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            color: #ecf0f1;
+            font-size: 36px;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 1.5s forwards;
+        }
+
+        .container {
+            position: relative;
+            padding: 20px;
+            opacity: 0;
+            animation: fadeIn 2s forwards 0.5s; /* Animação de fade-in suave */
+        }
+
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 10px;
+            border: 2px solid #fff;
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            font-size: 18px;
+            border-radius: 10px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Resultados do tempo */
+        .weather-result {
+            margin-top: 30px;
+            display: none;
+            opacity: 0;
+            animation: fadeIn 2s forwards 1s;
+        }
+
+        .weather-result img {
+            width: 80px;
+        }
+
+        .temperature {
+            font-size: 3em;
+            margin: 10px 0;
+        }
+
+        /* Botão "Entrar" */
+        .enter-button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #2ecc71;
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            margin-top: 40px;
+            opacity: 0;
+            animation: fadeIn 2s forwards 1.5s; /* Animação suave do botão */
+        }
+
+        .enter-button:hover {
+            background-color: #27ae60;
+        }
+
+        /* Efeito de "fade-out" ao recarregar */
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="container">
+        <h1>Clime Vibe</h1>
+        <button class="enter-button" onclick="showWeatherSection()">Entrar</button>
+        
+        <!-- Seção de Previsão -->
+        <div id="weatherSection" style="display:none;">
+            <div class="search-bar">
+                <input type="text" id="city" placeholder="Digite o nome da cidade" oninput="clearSpaces()">
+                <button onclick="getWeather()">Ver Previsão</button>
+            </div>
+            <div id="weatherResult" class="weather-result">
+                <!-- Aqui vamos mostrar as informações do tempo -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "04a97a1a1f47e6e4707c9bd554b11e95";  // Sua chave da API
+        const apiUrl = "https://api.openweathermap.org/data/2.5/weather";
+
+        // Função para remover espaços extras ao digitar o nome da cidade
+        function clearSpaces() {
+            let cityInput = document.getElementById('city');
+            cityInput.value = cityInput.value.trim();
+        }
+
+        // Função para exibir a seção de previsão após clicar em "Entrar"
+        function showWeatherSection() {
+            document.querySelector('.enter-button').style.display = 'none'; // Esconde o botão "Entrar"
+            document.getElementById('weatherSection').style.display = 'block'; // Exibe a seção de previsão
+        }
+
+        async function getWeather() {
+            const city = document.getElementById('city').value;
+            if (!city) {
+                alert("Por favor, digite o nome de uma cidade!");
+                return;
+            }
+
+            const url = `${apiUrl}?q=${city}&appid=${apiKey}&units=metric&lang=pt_br`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.cod === "404") {
+                    alert("Cidade não encontrada!");
+                    return;
+                }
+
+                displayWeather(data);
+            } catch (error) {
+                console.error("Erro ao obter dados do tempo:", error);
+                alert("Erro ao buscar dados do tempo. Tente novamente.");
+            }
+        }
+
+        function displayWeather(data) {
+            const weatherResult = document.getElementById("weatherResult");
+            const { main, weather, wind } = data;
+
+            const weatherHTML = `
+                <h2>${data.name}, ${data.sys.country}</h2>
+                <img src="http://openweathermap.org/img/wn/${weather[0].icon}.png" alt="${weather[0].description}">
+                <div class="temperature">${main.temp}°C</div>
+                <div>Condição: ${weather[0].description}</div>
+                <div>Vento: ${wind.speed} m/s</div>
+            `;
+
+            weatherResult.innerHTML = weatherHTML;
+            weatherResult.style.display = 'block';  // Exibe o resultado após a consulta
+        }
+    </script>
+</body>
+</html>
